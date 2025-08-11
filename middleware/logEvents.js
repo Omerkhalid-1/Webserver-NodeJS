@@ -27,10 +27,10 @@ const logEvents = async (message, logName) => {
     console.log(logItem);
     
     try {
-        const logsDir = path.join(__dirname, 'logs');
+        const logsDir = path.join(__dirname,'..', 'logs');
         
         // Check if logs directory exists
-        if (!fs.existsSync(logsDir)) {
+        if (!fs.existsSync(path.join(__dirname, '..', 'logs'))) {
             await fsPromises.mkdir(logsDir, { recursive: true });
         }
         

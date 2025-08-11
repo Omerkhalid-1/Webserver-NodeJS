@@ -20,6 +20,7 @@
     "concat-map": "^0.0.1",
     "date-fns": "^4.1.0",
     "debug": "^4.4.1",
+    "express": "^5.1.0",
     "fill-range": "^7.1.1",
     "fsevents": "^2.3.3",
     "glob-parent": "^5.1.2",
