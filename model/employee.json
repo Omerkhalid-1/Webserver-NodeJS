@@ -2,16 +2,73 @@
     {
         "id" : 1,
         "firstname" : "Omer",
-        "lastname" : "Katz"
+        "lastname" : "Katz",
+        "designation" : "Software Engineer",
+        "department" : "Engineering"
     },
     {
         "id" : 2,
         "firstname" : "John",
-        "lastname" : "Doe"
+        "lastname" : "Doe",
+        "designation" : "Product Manager",
+        "department" : "Product"
     },
     {
         "id" : 3,
         "firstname" : "Jane",
-        "lastname" : "Smith"
+        "lastname" : "Smith",
+        "designation" : "UX Designer",
+        "department" : "Design"
+    }
+    ,
+    {
+        "id" : 4,
+        "firstname" : "Alice",
+        "lastname" : "Johnson",
+        "designation" : "Data Scientist",
+        "department" : "Data Science"
+    },
+    {
+        "id" : 5,
+        "firstname" : "Bob",
+        "lastname" : "Brown",
+        "designation" : "UI Designer",
+        "department" : "Design"
+    }
+    ,
+    {
+        "id" : 6,
+        "firstname" : "Charlie",
+        "lastname" : "Davis",
+        "designation" : "DevOps Engineer",
+        "department" : "Engineering"
+    },
+    {
+        "id" : 7,
+        "firstname" : "Eve",
+        "lastname" : "Wilson",
+        "designation" : "QA Engineer",
+        "department" : "Engineering"
+    },
+    {
+        "id" : 8,
+        "firstname" : "Frank",
+        "lastname" : "Garcia",
+        "designation" : "Systems Analyst",
+        "department" : "Operations"
+    },
+    {
+        "id" : 9,
+        "firstname" : "Grace",
+        "lastname" : "Martinez",
+        "designation" : "Marketing Specialist",
+        "department" : "Marketing"
+    },
+    {
+        "id" : 10,
+        "firstname" : "Hank",
+        "lastname" : "Lopez",
+        "designation" : "Sales Executive",
+        "department" : "Sales"
     }
 ]
