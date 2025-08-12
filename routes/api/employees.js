@@ -11,8 +11,9 @@ router.route('/')
     .get(employeesController.getAllEmployees)
     .post(employeesController.createNewEmployee)
     .put(employeesController.updateEmployee)
-    .delete(employeesController.deleteEmployee);
-
+    .delete(employeesController.deleteEmployee)
+    .patch(employeesController.modifyEmployee);
+    
     router.route('/:id')
     .get(employeesController.getEmployeeById)
     .get(employeesController.getEmployeesByDesignation);
