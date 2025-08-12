@@ -2,11 +2,12 @@ const path = require('path');
 const express = require('express');
 const PORT = process.env.PORT || 3500;
 const app = express();
-const {logger , logEvents} = require('./middleware/logEvents');
+
 
 // Middleware
 // build in data. to handle urlencoded
-app.use(express.urlencoded({ extended: false }));
+app.use(express.json()); // this will convert the json to javascript objects
+app.use(express.urlencoded({ extended: true })); // parse the data from URL also make it avaliable in the req.body
 app.use('/employees', require('./routes/api/employees'));
 
 app.use('/', require('./routes/root'));
@@ -16,7 +17,7 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use(express.json()); // 
+app.use(express.json());  
 app.use(express.static(path.join(__dirname, 'public')));
 
 

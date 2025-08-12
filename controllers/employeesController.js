@@ -1,5 +1,7 @@
 const data = {};
 data.employees = require('../data/employee.json');
+const fs = require('fs');
+const path = require('path');
 
 const getAllEmployees = (req, res) => {
     res.json(data.employees);
@@ -8,29 +10,42 @@ const getAllEmployees = (req, res) => {
 const createNewEmployee = (req, res) => {
     const newEmployee = {
         id: data.employees.length + 1,
-        name: req.body.name,
-        position: req.body.position,
+        firstname: req.body.firstname,
+        lastname: req.body.lastname,
         department: req.body.department,
         designation: req.body.designation || 'Not specified'
     };
-    data.employees.push(newEmployee);
+    try {
+        const filePath = path.join(__dirname, '../data/employee.json'); 
+        fs.writeFileSync(filePath, JSON.stringify(data, null, 4));
+        res.status(201).json(newEmployee);
+      } catch (error) {
+        console.error('Error writing to file:', error);
+        res.status(500).json({ message: 'Error saving employee data' });
+      }
     res.status(201).json(newEmployee);
 }
 
+
 const updateEmployee = (req, res) => {
+    
+    console.log('req.body:', req.body);
+    console.log('req.headers:', req.headers);
+    console.log('Content-Type:', req.get('Content-Type'));
     const { id } = req.body;
     const employee = data.employees.find(emp => emp.id === id);
     if (employee) {
-        employee.name = req.body.name || employee.name;
-        employee.position = req.body.position || employee.position;
-        employee.department = req.body.department || employee.department;
-        eomployee.designation = req.body.designation || employee.designation;
-        
-        res.json(employee);
+      employee.name = req.body.name || employee.name;
+      employee.position = req.body.position || employee.position;
+      employee.department = req.body.department || employee.department;
+      employee.designation = req.body.designation || employee.designation; 
+      console.log(employee.id);
+      
+      res.json(employee);
     } else {
-        res.status(404).json({ message: 'Employee not found' });
+      res.status(404).json({ message: 'Employee not found' });
     }
-}
+  }
 
 const deleteEmployee = (req, res) => {
     const { id } = req.body;

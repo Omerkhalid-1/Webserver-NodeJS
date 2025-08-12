@@ -14,7 +14,7 @@ router.route('/')
     .delete(employeesController.deleteEmployee);
 
     router.route('/:id')
-    .get(employeesController.getEmployeeById);
-
+    .get(employeesController.getEmployeeById)
+    .get(employeesController.getEmployeesByDesignation);
 
 module.exports = router;
