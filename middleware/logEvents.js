@@ -1,4 +1,3 @@
-// logEvents.js - Fixed version with validation
 const { format } = require('date-fns');
 const fs = require('fs');
 const fsPromises = require('fs/promises');
@@ -50,3 +49,18 @@ const logger = (req, res, next) => {
 }
 
 module.exports = {logger, logEvents};
+
+
+
+// Testing
+
+// Database - postgres 
+
+// Redis  
+
+// Sequelize orm 
+
+// Validation -- library validation.js, zod ( react )
+
+// Authentication, JWT, cookies, session.
+

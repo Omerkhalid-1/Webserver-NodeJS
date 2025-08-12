@@ -1,4 +1,4 @@
-const path = require('path');
+const path = require('path');//??
 const express = require('express');
 const PORT = process.env.PORT || 3500;
 const app = express();
@@ -7,7 +7,7 @@ const app = express();
 // Middleware
 // build in data. to handle urlencoded
 app.use(express.json()); // this will convert the json to javascript objects
-app.use(express.urlencoded({ extended: true })); // parse the data from URL also make it avaliable in the req.body
+app.use(express.urlencoded({ extended: false })); // parse the data from URL also make it avaliable in the req.body
 app.use('/employees', require('./routes/api/employees'));
 
 app.use('/', require('./routes/root'));

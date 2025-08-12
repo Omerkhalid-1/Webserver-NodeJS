@@ -1,12 +1,13 @@
 const data = {};
 data.employees = require('../data/employee.json');
+const fs = require('fs').promises;
+const path = require('path');
 
 const getAllEmployees = (req, res) => {
     res.json(data.employees);
 }
 
-const fs = require('fs').promises;
-const path = require('path');
+
 
 // Read data from file function
 const readDataFromFile = async () => {
