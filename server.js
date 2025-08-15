@@ -2,7 +2,7 @@ const path = require('path');//??
 const express = require('express');
 const PORT = process.env.PORT || 3500;
 const app = express();
-
+const {logger, logEvents} = require('./middleware/logEvents');
 
 // Middleware
 // build in data. to handle urlencoded
