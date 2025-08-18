@@ -4,3 +4,8 @@ Codes
 data
 logs
 .env
+.vscode/settings.json
+.env.test
+postgres.session.sql
+# Ignore all .log files
+*.log
