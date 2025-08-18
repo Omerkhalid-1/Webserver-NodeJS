@@ -1,0 +1,14 @@
+{
+    "sqltools.connections": [
+        {
+            "previewLimit": 50, // Limit rows shown when previewing a query
+            "server": "localhost",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "postgres",
+            "database": "employee",
+            "username": "postgres",
+            "connectionTimeout": 30
+        }
+    ]
+}

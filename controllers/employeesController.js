@@ -1,251 +1,331 @@
-const data = {};
-data.employees = require('../data/employee.json');
-const fs = require('fs').promises;
-const path = require('path');
+const { sequelize } = require('../database/connection');
+const { DataTypes, Op } = require('sequelize');
 
-const getAllEmployees = (req, res) => {
-    res.json(data.employees);
+// Initialize Employee model with error handling
+let Employee;
+try {
+    const EmployeeModel = require('../models/employee');
+    Employee = EmployeeModel(sequelize, DataTypes);
+    console.log('✅ Employee model loaded successfully in controller');
+} catch (error) {
+    console.error('❌ Failed to load Employee model:', error);
+    throw error;
 }
 
-
-
-// Read data from file function
-const readDataFromFile = async () => {
-  try {
-    const filePath = path.join(__dirname, '../data/employee.json');
-    const fileContent = await fs.readFile(filePath, 'utf8');
-    const data = JSON.parse(fileContent);
-    //console.log('Data read from file:', data);
-    return data;
-  } catch (error) {
-    console.error('Error reading file:', error);
-    return { employees: [] };
-  }
+// Initialize and sync the model
+const initializeModel = async () => {
+    try {
+        await Employee.sync();
+        console.log('✅ Employee model synced in controller');
+    } catch (error) {
+        console.error('❌ Employee model sync failed:', error);
+    }
 };
 
-const writeDataToFile = async (data) => {
-  try {
-    const jsonData = JSON.stringify(data, null, 2); // Pretty formatted JSON
-    await fs.writeFile(path.join(__dirname, '../data/employee.json'), jsonData, 'utf8');
-  } catch (error) {
-    console.error('Error writing to file:', error);
-    throw error; 
-  }
+// Call initialization
+initializeModel();
+
+const getAllEmployees = async (req, res) => {
+    try {
+        if (!Employee) {
+            throw new Error('Employee model not initialized');
+        }
+        
+        const employees = await Employee.findAll({
+            order: [['id', 'ASC']]
+        });
+        
+        res.json(employees);
+    } catch (error) {
+        console.error('Error fetching employees:', error);
+        res.status(500).json({ 
+            message: 'Internal server error',
+            error: error.message 
+        });
+    }
 };
 
-// Create employee function
 const createNewEmployee = async (req, res) => {
-  const { firstname, lastname, designation, department } = req.body;
-    // Validate the request.
-    if (!firstname || !lastname || !designation || !department) {
-      return res.status(400).json({ 
-        message: 'All fields (firstname, lastname, designation, department) are required' 
-      });
-    }
-
-
-  try {
-    // Get data from file
-    const data = await readDataFromFile();
-    
-    // employees array exists
-    if (!data.employees) {
-      data.employees = [];
-    }
-    
-    // Create new employee
-    const newEmployee = {
-      id: data.employees.length + 1,
-      firstname: req.body.firstname,
-      lastname: req.body.lastname,
-      designation: req.body.designation,
-      department: req.body.department
-    };
-    
-    // Add to employee array
-    data.employees.push(newEmployee);
-    
-    // Save back to file
-    const filePath = path.join(__dirname, '../data/employee.json');
-    await fs.writeFile(filePath, JSON.stringify(data, null, 2));
-    
-    // Send response
-    res.status(201).json({
-      message: 'Employee added successfully',
-      employee: newEmployee
-    });
-    
-  } catch (error) {
-    console.error('Error in createNewEmployee:', error);
-    res.status(500).json({ 
-      message: 'Failed to create employee',
-      error: error.message 
-    });
-  }
-};
- 
-
-const updateEmployee = async (req, res) => {
-  try {
-    console.log('req.body:', req.body);
-    console.log('req.headers:', req.headers);
+    console.log(' createNewEmployee called');
+    console.log('Request headers:', req.headers);
+    console.log('Request body:', req.body);
     console.log('Content-Type:', req.get('Content-Type'));
     
-    // Get fresh data from file
-    const data = await readDataFromFile();
+    const { firstname, lastname, designation, department } = req.body;
     
-    // Ensure employees array exists
-    if (!data.employees || !Array.isArray(data.employees)) {
-      return res.status(500).json({ message: 'Invalid data structure' });
+    // Validate the request
+    if (!firstname || !lastname || !designation || !department) {
+        console.log(' Validation failed - missing fields');
+        return res.status(400).json({ 
+            message: 'All fields (firstname, lastname, designation, department) are required' 
+        });
     }
     
-    // Get ID from request body and convert to number
+    console.log('Validation passed');
+
+    try {
+        if (!Employee) {
+            throw new Error('Employee model not initialized');
+        }
+        
+        // Create new employee
+        const newEmployee = await Employee.create({
+            firstname: firstname.trim(),
+            lastname: lastname.trim(),
+            designation: designation.trim(),
+            department: department.trim()
+        });
+
+        res.status(201).json({
+            message: 'Employee added successfully',
+            employee: newEmployee
+        });
+
+    } catch (error) {
+        console.error('Error in createNewEmployee:', error);
+        
+        // Handle Sequelize validation errors
+        if (error.name === 'SequelizeValidationError') {
+            return res.status(400).json({
+                message: 'Validation error',
+                errors: error.errors.map(err => ({
+                    field: err.path,
+                    message: err.message
+                }))
+            });
+        }
+
+        // Handle unique constraint errors
+        if (error.name === 'SequelizeUniqueConstraintError') {
+            return res.status(409).json({
+                message: 'Employee already exists',
+                error: error.message
+            });
+        }
+
+        res.status(500).json({ 
+            message: 'Failed to create employee',
+            error: error.message 
+        });
+    }
+};
+// to update the employee designation and department. 
+const updateEmployee = async (req, res) => {
+    try {
+        if (!Employee) {
+            throw new Error('Employee model not initialized');
+        }
+        console.log('req.body:', req.body);
+
+        const { id, firstname, lastname, designation, department } = req.body;
+        const employeeId = parseInt(id);
+        
+        if (!employeeId) {// this employee does not exist. 
+            return res.status(400).json({ message: 'Valid employee ID is required' });
+        }
+        if (!firstname || !lastname || !designation || !department) {
+            return res.status(400).json({ 
+                message: 'All fields (firstname, lastname, designation, department) are required' 
+            });
+        }
+        
+        const employee = await Employee.findByPk(employeeId);
+        if (!employee) {
+            return res.status(404).json({ message: 'Employee not found' });
+        }
+
+        const updatedEmployee = await employee.update({
+            firstname: firstname.trim(),
+            lastname: lastname.trim(),
+            designation: designation.trim(),
+            department: department.trim()
+        });
+
+        return res.status(200).json({
+            message: 'Employee updated successfully',
+            employee: updatedEmployee
+            
+        });
+        
+    } catch (error) {
+        console.error('Error updating employee:', error);
+        
+        if (error.name === 'SequelizeValidationError') {
+            return res.status(400).json({
+                message: 'Validation error',
+                errors: error.errors.map(err => ({
+                    field: err.path,
+                    message: err.message
+                }))
+            });
+        }
+
+        return res.status(500).json({ 
+            message: 'Error updating employee',
+            error: error.message 
+        });
+    }
+};
+
+const deleteEmployee = async (req, res) => {
     const { id } = req.body;
-    const employeeId = parseInt(id);
     
-    if (!employeeId) {
-      return res.status(400).json({ message: 'Valid employee ID is required' });
+    if (!id) {
+        return res.status(400).json({ message: 'Employee ID is required' });
     }
     
-    // Find employee by ID
-    const employee = data.employees.find(emp => emp.id === employeeId);
+    try {
+        if (!Employee) {
+            throw new Error('Employee model not initialized');
+        }
+        
+        const employee = await Employee.findByPk(parseInt(id));
+        
+        if (!employee) {
+            return res.status(404).json({ message: 'Employee not found' });
+        }
+
+        const deletedEmployeeData = {
+            id: employee.id,
+            firstname: employee.firstname,
+            lastname: employee.lastname,
+            designation: employee.designation,
+            department: employee.department
+        };
+
+        await employee.destroy();
+        
+        console.log('Deleted employee:', deletedEmployeeData);
+        res.json(deletedEmployeeData);
+        
+    } catch (error) {
+        console.error('Error deleting employee:', error);
+        res.status(500).json({ 
+            message: 'Failed to delete employee',
+            error: error.message 
+        });
+    }
+};
+
+const getEmployeeById = async (req, res) => {
+    try {
+        if (!Employee) {
+            throw new Error('Employee model not initialized');
+        }
+        
+        if (!req.params.id) {
+            return res.status(400).json({ message: 'Employee ID parameter is required' });
+        }
+        
+        console.log('req.params.id:', req.params.id);
+        
+        const employee = await Employee.findByPk(parseInt(req.params.id));
+        
+        if (employee) {
+            res.json(employee); // response in case of 200
+        } else {
+            res.status(404).json({ message: 'Employee not found' });
+        }
+        
+        // Check if id is an integer
+        if (!Number.isInteger(Number(id))) {
+            return res.status(500).json({ error: "ID must be an integer" });
+        }
+        
+    } catch (error) {
+        console.error('Error fetching employee by ID:', error);
+        res.status(500).json({ 
+            message: 'Failed to fetch employee', 
+            error: error.message 
+        });
+    }
+};
+
+const getEmployeesByDesignation = async (req, res) => {
+    const designation = req.params.designation; 
     
-    if (employee) {
-      // Update fields - using correct field names from your JSON structure
-      employee.firstname = req.body.firstname || employee.firstname;
-      employee.lastname = req.body.lastname || employee.lastname;
-      employee.designation = req.body.designation || employee.designation;
-      employee.department = req.body.department || employee.department;
-      
-      // Save updated data back to file
-      const filePath = path.join(__dirname, '../data/employee.json');
-      await fs.writeFile(filePath, JSON.stringify(data, null, 2));
-      
-      return res.json({
-        message: 'Employee updated successfully',
-        employee: employee
-      });
-    } else {
-      return res.status(404).json({ message: 'Employee not found' });
+    if (!designation) {
+        return res.status(400).json({ message: 'Designation parameter is required' });
     }
     
-  } catch (error) {
-    console.error('Error updating employee:', error);
-    return res.status(500).json({ 
-      message: 'Error updating employee',
-      error: error.message 
-    });
-  }
+    try {
+        if (!Employee) {
+            throw new Error('Employee model not initialized');
+        }
+        
+        const employees = await Employee.findAll({
+            where: {
+                designation: {
+                    [Op.iLike]: `%${designation}%`
+                }
+            },
+            order: [['created_at', 'DESC']]
+        });
+        
+        if (employees.length > 0) {
+            res.json(employees);
+        } else {
+            res.status(404).json({ message: 'No employees found with the specified designation' });
+        }
+        
+    } catch (error) {
+        console.error('Error fetching employees by designation:', error);
+        res.status(500).json({ 
+            message: 'Failed to fetch employees by designation',
+            error: error.message 
+        });
+    }
 };
 
 
-const deleteEmployee = async(req, res) => {
-  const { id } = req.body;
-  
-  try {
-    const data = await readDataFromFile();
-  
-    if (!data.employees || !Array.isArray(data.employees)) {
-      return res.status(500).json({ message: 'Invalid data structure' });
-    }
-    
-    const index = data.employees.findIndex(emp => emp.id == id);
-    
-    if (index !== -1) {
-      const deletedEmployee = data.employees.splice(index, 1);
-      console.log('Deleted employee:', deletedEmployee);
-      // Write the updated data back to file
-      await writeDataToFile(data);
-      
-      res.json(deletedEmployee[0]);
-    } else {
-      res.status(404).json({ message: 'Employee not found' });
-    }
-  } catch (error) {
-    console.error('Error deleting employee:', error);
-    res.status(500).json({ message: 'Failed to delete employee' });
-  }
-}
-
-const getEmployeeById = async(req, res) => {
-  try {
-    const data = await readDataFromFile();
-  
-    if (!data.employees || !Array.isArray(data.employees)) {
-      return res.status(500).json({ message: 'Invalid data structure' });
-    }
-    if(!req.params.id) {
-        return res.status(400).json({ message: 'Employee ID parameter is required' });
-    }
-    // Find employee by ID
-    console.log('req.params.id:', req.params.id);
-    const employee = data.employees.find(emp => emp.id === parseInt(req.params.id));
-    if (employee) {
-        res.json(employee);
-    } else {
-        res.status(404).json({ message: 'Employee not found' });
-    }
-  } catch (error) {
-    console.error('Error fetching employee by ID:', error);
-    res.status(500).json({ message: 'Failed to fetch employee', error: error.message });
-  }
-}
-
-
-const getEmployeesByDesignation = (req, res) => {
-    const deignation = req.params.designation; 
-    if (!deignation) {
-        return res.status(400).json({ message: 'Designation parameter is required' });
-    }
-    const employees = data.employees.filter(emp => emp.designation.toLowerCase() === deignation.toLowerCase());
-    if (employees.length > 0) {
-        res.json(employees);
-    } else {
-        res.status(404).json({ message: 'No employees found with the specified designation' });
-    }
-}
-
-// Request in this form
-// Localhost:3000/api/employees
-// Body : {designation: senior developer, department: IT}
-
-
+// Runs this to modify the employee designation and department
 const modifyEmployee = async (req, res) => {
-  const {id, designation , department} = req.body;
-  if (!designation || !department || !id) {
-    return res.status(400).json({ message: 'Designation and department are required' });
-  }
-
-  try { 
-    const data = await readDataFromFile();
-    if (!data.employees || !Array.isArray(data.employees)) {
-      return res.status(500).json({ message: 'Invalid data structure' });
-    }
-    // Filter employees by id
-    const employee = data.employees.find(emp => emp.id === parseInt(id));
-    if (!employee) {
-      return res.status(404).json({ message: 'Employee not found' });
-    }
-    // Update employee details
-    employee.designation = designation;
-    employee.department = department;
+    const { id, designation, department } = req.body;
     
-    // Write updated data back to file
-    await writeDataToFile(data);
-    res.json({
-      message: 'Employee modified successfully',
-      employee: employee
-    });
+    if (!designation || !department || !id) {
+        return res.status(400).json({ message: 'ID, designation and department are required' });
+    }
 
-  } catch (error) {
-    console.error('Error modifying employee:', error);
-    res.status(500).json({ 
-      message: 'Failed to modify employee',
-      error: error.message 
-    });
-  }
-}
+    try {
+        if (!Employee) {
+            throw new Error('Employee model not initialized');
+        }
+        
+        const employee = await Employee.findByPk(parseInt(id));
+        
+        if (!employee) {
+            return res.status(404).json({ message: 'Employee not found' });
+        }
+        
+        const updatedEmployee = await employee.update({
+            designation: designation.trim(),
+            department: department.trim()
+        });
+        
+        res.json({
+            message: 'Employee modified successfully',
+            employee: updatedEmployee
+        });
 
+    } catch (error) {
+        console.error('Error modifying employee:', error);
+        
+        if (error.name === 'SequelizeValidationError') {
+            return res.status(400).json({
+                message: 'Validation error',
+                errors: error.errors.map(err => ({
+                    field: err.path,
+                    message: err.message
+                }))
+            });
+        }
+
+        res.status(500).json({ 
+            message: 'Failed to modify employee',
+            error: error.message 
+        });
+    }
+};
 
 module.exports = {
     getAllEmployees,

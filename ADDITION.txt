@@ -1,0 +1,20 @@
+Changes that i made after the meeting on 12th august.
+Installed postgresql
+configured with  the application. 
+got neccessary dependancies
+create the .env file and enter the credentials of the connection in it. 
+create database/connection and in it made two functions, testconnection and syncdatabase. 
+made sequelize instance in it to connect to the db. 
+after the connection, create the model/employee.js. 
+then write the updated controller api, load the employee model. 
+    sync the model, 
+
+
+TEST:
+install 'npm install --save-dev jest supertest'
+create the test cases
+update the server.js 
+chnages in the packages. 
+make .env.test
+
+add positve and negative cases. 

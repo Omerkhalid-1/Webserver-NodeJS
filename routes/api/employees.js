@@ -1,21 +1,33 @@
 const express = require('express');
 const router = express.Router();
-const path = require('path');
 const employeesController = require('../../controllers/employeesController');
-const { create } = require('domain');
-const data = {}
 
-data.employees = require('../../data/employee.json');
+// Debug middleware for this route
+router.use((req, res, next) => {
+    console.log(`🚀 Employee route hit: ${req.method} ${req.path}`);
+    next();
+});
 
+router.get('/test', (req, res) => {
+    console.log(' Test route hit!');
+    res.json({ message: 'Test route working!' });
+});
+
+// Main route for employees
 router.route('/')
     .get(employeesController.getAllEmployees)
     .post(employeesController.createNewEmployee)
     .put(employeesController.updateEmployee)
     .delete(employeesController.deleteEmployee)
     .patch(employeesController.modifyEmployee);
-    
-    router.route('/:id')
-    .get(employeesController.getEmployeeById)
+
+// IMPORTANT: Put specific routes BEFORE parameterized routes
+// Route for getting employees by designation
+router.route('/designation/:designation')
     .get(employeesController.getEmployeesByDesignation);
+
+// Route for getting employee by ID (must come AFTER specific routes)
+router.route('/:id')
+    .get(employeesController.getEmployeeById);
 
 module.exports = router;
