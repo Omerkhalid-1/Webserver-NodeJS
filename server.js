@@ -23,6 +23,11 @@ const initializeDatabase = async () => {
 // Health check 
 app.get('/health', async (req, res) => {
     try {
+        // Test database connection 
+        // query select 
+        // selete to get tables. 
+        // 1- connection 
+        // 2- database 
         await sequelize.authenticate();
         res.json({ 
             status: 'OK', 
@@ -54,7 +59,9 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // API Routes
+app.use('/auth', require('./routes/api/auth'));
 app.use('/employees', require('./routes/api/employees'));
+app.use('/register', require('./routes/api/register'));
 
 // Root routes
 app.use('/', require('./routes/root'));

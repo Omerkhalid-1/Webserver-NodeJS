@@ -19,7 +19,7 @@ describe('Employee API', () => {
   
   // Test data
   const testEmployee = {
-    firstname: 'ali',
+    firstname:   'ali',
     lastname: 'riaz',
     designation: 'Software Developer',
     department: 'IT'

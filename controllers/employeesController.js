@@ -6,9 +6,9 @@ let Employee;
 try {
     const EmployeeModel = require('../models/employee');
     Employee = EmployeeModel(sequelize, DataTypes);
-    console.log('✅ Employee model loaded successfully in controller');
+    //console.log(' Employee model loaded successfully in controller');
 } catch (error) {
-    console.error('❌ Failed to load Employee model:', error);
+    console.error(' Failed to load Employee model:', error);
     throw error;
 }
 
@@ -16,9 +16,9 @@ try {
 const initializeModel = async () => {
     try {
         await Employee.sync();
-        console.log('✅ Employee model synced in controller');
+        console.log(' Employee model synced in controller');
     } catch (error) {
-        console.error('❌ Employee model sync failed:', error);
+        console.error(' Employee model sync failed:', error);
     }
 };
 

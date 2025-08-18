@@ -18,3 +18,8 @@ chnages in the packages.
 make .env.test
 
 add positve and negative cases. 
+
+then add the authentication and the jwb token, create a auth and register controller. and then auth and register route files. 
+after that get random access and refresh token like this
+in terminal press 'node' 
+then `require('crypto').randomBytes(64).toString('hex')`
