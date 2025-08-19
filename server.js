@@ -4,6 +4,7 @@ const PORT = process.env.PORT || 3500;
 const app = express();
 require('dotenv').config();
 const {logger, logEvents} = require('./middleware/logEvents');
+const verifyJWT = require('./middleware/verifyJWT');
 
 // Import database
 const { sequelize, testConnection, syncDatabase } = require('./database/connection');

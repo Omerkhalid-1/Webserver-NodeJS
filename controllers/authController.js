@@ -3,7 +3,7 @@ const userDB = {
     setUsers: function(data) { this.users = data; }
 }
 const bcrypt = require('bcrypt');
-
+const path = require('path');
 const jwt = require('jsonwebtoken');
 require('dotenv').config(); 
 const fspromises = require('fs').promises;
@@ -51,7 +51,7 @@ const handlelogin = async (req, res, next) => {
         });
 
 
-        res.json({ acessToken });
+        res.json({ accessToken });
 
     } else {
         res.status(401);  

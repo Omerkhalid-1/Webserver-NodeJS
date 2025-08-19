@@ -1,21 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const employeesController = require('../../controllers/employeesController');
-
 const verifyJWT = require('../../middleware/verifyJWT');
-// Debug middleware for this route
-router.use((req, res, next) => {
-    console.log(`Employee route hit: ${req.method} ${req.path}`);
-    next();
-});
 
-router.get('/test', (req, res) => {
-    console.log(' Test route hit!');
-    res.json({ message: 'Test route working!' });
-});
 
 // Main route for employees
 router.route('/')
+    .get(verifyJWT, employeesController.getAllEmployees)
     .get(employeesController.getAllEmployees)
     .post(employeesController.createNewEmployee)
     .put(employeesController.updateEmployee)
