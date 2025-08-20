@@ -5,7 +5,7 @@ const app = express();
 require('dotenv').config();
 const {logger, logEvents} = require('./middleware/logEvents');
 const verifyJWT = require('./middleware/verifyJWT');
-
+const cookieParser = require('cookie-parser');
 // Import database
 const { sequelize, testConnection, syncDatabase } = require('./database/connection');
 
@@ -57,16 +57,24 @@ app.use((req, res, next) => {
 // Built-in middleware
 app.use(express.json()); 
 app.use(express.urlencoded({ extended: false }));
-app.use(express.static(path.join(__dirname, 'public')));
 
+// middle ware for cookies 
+app.use(cookieParser());
+
+
+app.use(express.static(path.join(__dirname, 'public')));
+//app.use(verifyJWT);
 // API Routes
 app.use('/auth', require('./routes/api/auth'));
-app.use('/employees', require('./routes/api/employees'));
+app.use('/refresh', require('./routes/api/refresh'));
 app.use('/register', require('./routes/api/register'));
-
 // Root routes
 app.use('/', require('./routes/root'));
 
+// all routes under this line will use JWT verification
+app.use(verifyJWT); // Apply JWT verification middleware to all routes below this point
+app.use('/employees', require('./routes/api/employees'));
+app.use('/employees', require('./routes/api/logout'));
 /*
 // Main routes
 app.get('/', (req, res) => {

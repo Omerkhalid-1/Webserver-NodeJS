@@ -23,3 +23,13 @@ then add the authentication and the jwb token, create a auth and register contro
 after that get random access and refresh token like this
 in terminal press 'node' 
 then `require('crypto').randomBytes(64).toString('hex')`
+
+then make auth files in controller and middle ware. 
+middleware will have JWT verification function. 
+middleware does this 
+✅ Header exists
+✅ Token extracted
+✅ Token verified
+✅ User info saved to req.user
+✅ Continue to route handler
+

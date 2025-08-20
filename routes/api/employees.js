@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const employeesController = require('../../controllers/employeesController');
-const verifyJWT = require('../../middleware/verifyJWT');
 
+//app.use(verifyJWT);
 
 // Main route for employees
 router.route('/')
-    .get(verifyJWT, employeesController.getAllEmployees)
+    //.get(verifyJWT, employeesController.getAllEmployees)
     .get(employeesController.getAllEmployees)
     .post(employeesController.createNewEmployee)
     .put(employeesController.updateEmployee)
