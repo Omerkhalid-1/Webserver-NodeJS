@@ -1,5 +1,5 @@
 const { Sequelize } = require('sequelize');
-require('dotenv').config();
+require('dotenv').config({ quiet: true });
 
 // Create Sequelize instance
 const sequelize = new Sequelize(
@@ -12,6 +12,7 @@ const sequelize = new Sequelize(
     host: process.env.DB_HOST,// db server location
     port: process.env.DB_PORT,// port 
     dialect: 'postgres', // tells database type 
+    logging: false,
 
     //logging: process.env.NODE_ENV === 'development' ? console.log : false
   }

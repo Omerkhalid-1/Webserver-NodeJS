@@ -23,7 +23,7 @@ const handleLogout =  async (req, res) => {
     // refresh token in db
     const foundUser = userDB.users.find(person => person.refreshToken === refreshToken);
     if(!foundUser) {
-        res.clearCokkie('jwt', { httpOnly: true, sameSite: 'None', secure: true });
+        res.clearCokkie('jwt', { httpOnly: true });
 
         return res.status(204)  // forbidden
     }

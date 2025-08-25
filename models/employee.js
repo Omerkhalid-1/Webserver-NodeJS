@@ -6,8 +6,6 @@ module.exports = (sequelize, DataTypes) => {
   class Employee extends Model { // inherit all the methods and properties from the base model
     static associate(models) {
       // Define associations here
-      // Example: Employee.hasMany(models.Project, { foreignKey: 'employeeId' });
-      // will use these when have more than one model and need to define relationships
     }
 
     // Instance method to get full name

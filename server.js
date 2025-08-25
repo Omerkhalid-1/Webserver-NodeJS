@@ -2,7 +2,7 @@ const path = require('path');
 const express = require('express');
 const PORT = process.env.PORT || 3500;
 const app = express();
-require('dotenv').config();
+require('dotenv').config({ quiet: true });
 const {logger, logEvents} = require('./middleware/logEvents');
 const verifyJWT = require('./middleware/verifyJWT');
 const cookieParser = require('cookie-parser');
@@ -48,7 +48,7 @@ app.get('/health', async (req, res) => {
 
 
 app.use((req, res, next) => {
-    console.log(` Request received: ${req.method} ${req.path}`);
+    //console.log(` Request received: ${req.method} ${req.path}`);
     
     logEvents(`${req.method}\t${req.headers.origin || 'undefined'}\t${req.url}`, 'reqLog.txt');
     next();
