@@ -27,9 +27,22 @@ then `require('crypto').randomBytes(64).toString('hex')`
 then make auth files in controller and middle ware. 
 middleware will have JWT verification function. 
 middleware does this 
+
 ✅ Header exists
 ✅ Token extracted
 ✅ Token verified
 ✅ User info saved to req.user
 ✅ Continue to route handler
+
+there was an issue with the cookie and then had to solve by logging the cookie request and the cookie it recieve. 
+it showed that cookie was being requested 
+but when looked closely it was sending the refresh token not the access token. 
+
+
+To add the ZOD, 
+We have to make a file called validate/employeeValidate, in it we have to create the employeeSchema, there we have two functions validateCreateEmployee and validateUpdateEmployee.
+then after making these functions, we will use them in the routes like this:
+.post(validateCreateEmployee, employeesController.createNewEmployee)
+.put(validateUpdateEmployee, employeesController.updateEmployee)
+
 

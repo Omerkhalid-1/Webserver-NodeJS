@@ -3,10 +3,12 @@ const userDB = {
     setUsers: function(data) { this.users = data; }
 }
 const bcrypt = require('bcrypt');
+const { z } = require('zod');
 const path = require('path');
 const jwt = require('jsonwebtoken');
 require('dotenv').config(); 
 const fspromises = require('fs').promises;
+
 
 const handlelogin = async (req, res, next) => {
     const { user, pwd } = req.body;
@@ -26,7 +28,7 @@ const handlelogin = async (req, res, next) => {
         const accessToken = jwt.sign(
             { "username": foundUser.username },
             process.env.ACCESS_TOKEN_SECRET,
-            { expiresIn: '120s' }
+            { expiresIn: '15m' }
         );
 
         const refreshToken = jwt.sign(
@@ -43,11 +45,11 @@ const handlelogin = async (req, res, next) => {
             path.join(__dirname, '..', 'models', 'user.json'),
             JSON.stringify(userDB.users)
         );
-        res.cookie('jwt', refreshToken, {
-            httpOnly: true,
+        res.cookie('jwt', accessToken, {
+            httpOnly: true, // document.cookie,(xss attack) 
             maxAge: 24 * 60 * 60 * 1000, // 1 day
             secure: false, // set to true if using https
-            sameSite: 'None' // set to 'None' if using cross-site cookies
+            sameSite: 'Lax' // set to 'None' if using cross-site cookies
         });
 
 

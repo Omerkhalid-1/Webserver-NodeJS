@@ -9,3 +9,4 @@ logs
 postgres.session.sql
 # Ignore all .log files
 *.log
+.env.test

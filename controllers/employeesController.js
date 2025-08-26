@@ -25,7 +25,7 @@ const initializeModel = async () => {
 // Call initialization
 initializeModel();
 
-const getAllEmployees = async (req, res) => {
+const getAllEmployees = async (req, res ) => {
     try {
         if (!Employee) {
             throw new Error('Employee model not initialized');
@@ -46,69 +46,41 @@ const getAllEmployees = async (req, res) => {
 };
 
 const createNewEmployee = async (req, res) => {
-    console.log(' createNewEmployee called');
-    console.log('Request headers:', req.headers);
-    console.log('Request body:', req.body);
-    console.log('Content-Type:', req.get('Content-Type'));
-    
-    const { firstname, lastname, designation, department } = req.body;
-    
-    // Validate the request
-    if (!firstname || !lastname || !designation || !department) {
-        console.log(' Validation failed - missing fields');
-        return res.status(400).json({ 
-            message: 'All fields (firstname, lastname, designation, department) are required' 
-        });
-    }
-    
-    console.log('Validation passed');
-
     try {
-        if (!Employee) {
-            throw new Error('Employee model not initialized');
-        }
-        
-        // Create new employee
+        const { firstname, lastname, designation, department } = req.body;
+
         const newEmployee = await Employee.create({
             firstname: firstname.trim(),
             lastname: lastname.trim(),
             designation: designation.trim(),
-            department: department.trim()
+            department: department.trim(),
         });
 
         res.status(201).json({
             message: 'Employee added successfully',
-            employee: newEmployee
+            employee: newEmployee,
         });
 
     } catch (error) {
         console.error('Error in createNewEmployee:', error);
-        
-        // Handle Sequelize validation errors
+
         if (error.name === 'SequelizeValidationError') {
             return res.status(400).json({
                 message: 'Validation error',
                 errors: error.errors.map(err => ({
                     field: err.path,
-                    message: err.message
-                }))
+                    message: err.message,
+                })),
             });
         }
 
-        // Handle unique constraint errors
-        if (error.name === 'SequelizeUniqueConstraintError') {
-            return res.status(409).json({
-                message: 'Employee already exists',
-                error: error.message
-            });
-        }
-
-        res.status(500).json({ 
+        res.status(500).json({
             message: 'Failed to create employee',
-            error: error.message 
+            error: error.message,
         });
     }
 };
+
 // to update the employee designation and department. 
 const updateEmployee = async (req, res) => {
     try {

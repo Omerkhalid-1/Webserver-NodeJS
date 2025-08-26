@@ -61,6 +61,14 @@ app.use(express.urlencoded({ extended: false }));
 // middle ware for cookies 
 app.use(cookieParser());
 
+app.use((req, res, next) => {
+    console.log(' Request:', req.method, req.url);
+    console.log(' Cookies received:', req.cookies);
+    console.log(' Raw cookie header:', req.headers.cookie);
+    console.log('-------------------');
+    next();
+});
+
 
 app.use(express.static(path.join(__dirname, 'public')));
 //app.use(verifyJWT);
@@ -72,6 +80,7 @@ app.use('/register', require('./routes/api/register'));
 app.use('/', require('./routes/root'));
 
 // all routes under this line will use JWT verification
+
 app.use(verifyJWT); // Apply JWT verification middleware to all routes below this point
 app.use('/employees', require('./routes/api/employees'));
 app.use('/employees', require('./routes/api/logout'));

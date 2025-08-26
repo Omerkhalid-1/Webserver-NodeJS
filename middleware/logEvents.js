@@ -52,15 +52,16 @@ module.exports = {logger, logEvents};
 
 
 
-// Testing
+// Testing// done 
 
-// Database - postgres 
+// Database - postgres // done 
 
-// Redis  
+// Authentication, JWT, cookies, session. // done 
+  
+// Sequelize orm // done 
 
-// Sequelize orm 
+// Redis 
+// Validation -- library validation.js, zod ( react )  // done
 
-// Validation -- library validation.js, zod ( react )
 
-// Authentication, JWT, cookies, session.
 
