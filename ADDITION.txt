@@ -45,4 +45,9 @@ then after making these functions, we will use them in the routes like this:
 .post(validateCreateEmployee, employeesController.createNewEmployee)
 .put(validateUpdateEmployee, employeesController.updateEmployee)
 
+// 26th august
+Adding the validators in the employeesController
+Session vs JWT
+Session: User sends credentials, server sends the session id, user save the session id in the browser and sends with each request in cookies.
+JWT: User submit the login form, server creates a JWT, browser puts the token in local storage and signs JWT header validation on future request.
 

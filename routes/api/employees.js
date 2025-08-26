@@ -3,14 +3,13 @@ const router = express.Router();
 const employeesController = require('../../controllers/employeesController');
 
 //app.use(verifyJWT);
-const { validateCreateEmployee, validateUpdateEmployee } = require("../../validators/employeeValidator");
 
 // Main route for employees
 router.route('/')
     //.get(verifyJWT, employeesController.getAllEmployees)
     .get(employeesController.getAllEmployees)
-    .post(validateCreateEmployee, employeesController.createNewEmployee)
-    .put(validateUpdateEmployee, employeesController.updateEmployee)
+    .post(employeesController.createNewEmployee)
+    .put(employeesController.updateEmployee)
     .delete(employeesController.deleteEmployee)
     .patch(employeesController.modifyEmployee);
 
