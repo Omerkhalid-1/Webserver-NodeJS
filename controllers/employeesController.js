@@ -1,15 +1,48 @@
 const { sequelize } = require('../database/connection');
 const { DataTypes, Op } = require('sequelize');
 const { z } = require("zod");
+const Redis = require('redis'); // Fixed: Changed from redis to Redis
+
+// Redis client initialization
+let redisClient;
+try {
+    redisClient = Redis.createClient({
+        host: process.env.REDIS_HOST || 'localhost',
+        port: process.env.REDIS_PORT || 6379,
+        password: process.env.REDIS_PASSWORD || undefined,
+        retryDelayOnFailover: 100,
+        maxRetriesPerRequest: 3,
+        lazyConnect: true
+    });
+
+    // Handle Redis connection events
+    redisClient.on('connect', () => {
+        console.log('Connected to Redis');
+    });
+
+    redisClient.on('error', (error) => {
+        console.error('Redis connection error:', error.message);
+    });
+
+    redisClient.on('ready', () => {
+        console.log('Redis client ready');
+    });
+
+    // Connect to Redis
+    redisClient.connect().catch(console.error);
+
+} catch (error) {
+    console.error('Failed to initialize Redis client:', error.message);
+    redisClient = null;
+}
 
 // Initialize Employee model with error handling
 let Employee;
 try {
     const EmployeeModel = require('../models/employee');
     Employee = EmployeeModel(sequelize, DataTypes);
-    //console.log(' Employee model loaded successfully in controller');
 } catch (error) {
-    console.error(' Failed to load Employee model:', error);
+    console.error('Failed to load Employee model:', error);
     throw error;
 }
 
@@ -48,7 +81,6 @@ const validateCreateEmployeeData = (data) => {
     } catch (err) {
         console.log('Validation error details:', err);
         
-        // Handle case where data is null/undefined
         if (!data || typeof data !== 'object') {
             return {
                 success: false,
@@ -61,7 +93,6 @@ const validateCreateEmployeeData = (data) => {
             };
         }
 
-        // Handle Zod validation errors
         if (err.errors && Array.isArray(err.errors)) {
             return {
                 success: false,
@@ -74,7 +105,6 @@ const validateCreateEmployeeData = (data) => {
             };
         }
 
-        // Handle unexpected error format
         return {
             success: false,
             message: "There was an issue validating the employee information",
@@ -94,7 +124,6 @@ const validateUpdateEmployeeData = (data) => {
     } catch (err) {
         console.log('Update validation error details:', err);
         
-        // Handle case where data is null/undefined
         if (!data || typeof data !== 'object') {
             return {
                 success: false,
@@ -107,7 +136,6 @@ const validateUpdateEmployeeData = (data) => {
             };
         }
 
-        // Handle Zod validation errors
         if (err.errors && Array.isArray(err.errors)) {
             return {
                 success: false,
@@ -120,7 +148,6 @@ const validateUpdateEmployeeData = (data) => {
             };
         }
 
-        // Handle unexpected error format
         return {
             success: false,
             message: "There was an issue validating the employee update information",
@@ -137,31 +164,76 @@ const validateUpdateEmployeeData = (data) => {
 const initializeModel = async () => {
     try {
         await Employee.sync();
-        console.log(' Employee model synced in controller');
+        console.log('Employee model synced in controller');
     } catch (error) {
-        console.error(' Employee model sync failed:', error);
+        console.error('Employee model sync failed:', error);
     }
 };
 
 // Call initialization
 initializeModel();
 
+// Fixed getAllEmployees function with proper Redis integration
 const getAllEmployees = async (req, res) => {
+    const key = 'employee:all';
+    const expiry = 3600; // 1 hour
+    
     try {
         if (!Employee) {
             throw new Error('Employee model not initialized');
         }
         
+        // Redis get - Fixed: Use redisClient instead of RedisClient
+        let cacheEmployees = null;
+        
+        if (redisClient && redisClient.isReady) {
+            try {
+                const cache = await redisClient.get(key);
+                if (cache) {
+                    cacheEmployees = JSON.parse(cache);
+                    console.log('Fetched employees from Redis cache');
+                }
+            } catch (redisError) {
+                console.error('Error fetching from Redis:', redisError.message);
+            }
+        }
+        
+        // If have cached data then return it
+        if (cacheEmployees) {
+            return res.json({
+                success: true,
+                message: `Retrieved ${cacheEmployees.length} employee(s) from the cache`,
+                count: cacheEmployees.length,
+                employees: cacheEmployees,
+                cache: true
+            });
+        }
+
+        // If no cache then get from database
+        console.log('Fetching employees from database');
         const employees = await Employee.findAll({
             order: [['id', 'ASC']]
         });
         
+        
+        if (redisClient && redisClient.isReady && employees.length > 0) {
+            try {
+                await redisClient.setEx(key, expiry, JSON.stringify(employees));
+                console.log('Stored employees in Redis cache');
+            } catch (redisError) {
+                console.error('Error storing in Redis:', redisError.message);
+            }
+        }
+        
+        // Response if there is no cache
         res.json({
             success: true,
             message: `Retrieved ${employees.length} employee(s) from the system`,
             count: employees.length,
-            employees: employees
+            employees: employees,
+            cache: false
         });
+        
     } catch (error) {
         console.error('Error fetching employees:', error);
         res.status(500).json({ 
@@ -172,13 +244,24 @@ const getAllEmployees = async (req, res) => {
     }
 };
 
+// Helper function to clear cache - call this when employees are modified)
+const clearEmployeeCache = async () => {
+    if (redisClient && redisClient.isReady) {
+        try {
+            await redisClient.del('employee:all');
+            console.log('Employee cache cleared');
+        } catch (error) {
+            console.warn('Failed to clear employee cache:', error.message);
+        }
+    }
+};
+
+
 const createNewEmployee = async (req, res) => {
     try {
-        // Log the incoming request for debugging
         console.log('Request body received:', req.body);
         console.log('Request body type:', typeof req.body);
         
-        // Validate request data
         const validation = validateCreateEmployeeData(req.body);
         if (!validation.success) {
             console.log('Validation failed:', validation);
@@ -186,7 +269,7 @@ const createNewEmployee = async (req, res) => {
                 success: false,
                 message: validation.message,
                 errors: validation.errors,
-                requestReceived: req.body // Help debug what was actually sent
+                requestReceived: req.body
             });
         }
 
@@ -199,6 +282,9 @@ const createNewEmployee = async (req, res) => {
             department: department.trim(),
         });
 
+        // Clear cache when new employee is added
+        await clearEmployeeCache();
+
         res.status(201).json({
             success: true,
             message: `Successfully added ${firstname} ${lastname} to the system`,
@@ -210,7 +296,6 @@ const createNewEmployee = async (req, res) => {
         console.error('Error name:', error.name);
         console.error('Error message:', error.message);
 
-        // Handle different types of database errors
         if (error.name === 'SequelizeValidationError') {
             return res.status(400).json({
                 success: false,
@@ -241,7 +326,6 @@ const createNewEmployee = async (req, res) => {
             });
         }
 
-        // Generic server error
         res.status(500).json({
             success: false,
             message: 'We encountered an unexpected issue while adding the employee. Please try again or contact support if the problem persists.',
@@ -251,13 +335,13 @@ const createNewEmployee = async (req, res) => {
     }
 };
 
+// Keep all your other functions exactly as they are...
 const updateEmployee = async (req, res) => {
     try {
         if (!Employee) {
             throw new Error('Employee model not initialized');
         }
 
-        // Validate request data
         const validation = validateUpdateEmployeeData(req.body);
         if (!validation.success) {
             return res.status(400).json({
@@ -286,6 +370,9 @@ const updateEmployee = async (req, res) => {
             designation: designation.trim(),
             department: department.trim()
         });
+
+        // Clear cache when employee is updated
+        await clearEmployeeCache();
 
         return res.status(200).json({
             success: true,
@@ -360,6 +447,9 @@ const deleteEmployee = async (req, res) => {
 
         await employee.destroy();
         
+        // Clear cache when employee is deleted
+        await clearEmployeeCache();
+        
         console.log('Deleted employee:', deletedEmployeeData);
         res.json({
             success: true,
@@ -393,7 +483,6 @@ const getEmployeeById = async (req, res) => {
         
         console.log('req.params.id:', req.params.id);
         
-        // Validate that ID is an integer
         const employeeId = parseInt(req.params.id);
         if (!Number.isInteger(employeeId) || employeeId <= 0) {
             return res.status(400).json({ 
@@ -479,11 +568,9 @@ const getEmployeesByDesignation = async (req, res) => {
     }
 };
 
-// Runs this to modify the employee designation and department
 const modifyEmployee = async (req, res) => {
     const { id, designation, department } = req.body;
     
-    // Validate required fields
     const missingFields = [];
     if (!id) missingFields.push('Employee ID');
     if (!designation || designation.trim() === '') missingFields.push('Designation');
@@ -526,6 +613,9 @@ const modifyEmployee = async (req, res) => {
             department: department.trim()
         });
         
+        // Clear cache when employee is modified
+        await clearEmployeeCache();
+        
         res.json({
             success: true,
             message: `Successfully updated ${updatedEmployee.firstname} ${updatedEmployee.lastname}'s job information`,
@@ -565,5 +655,9 @@ module.exports = {
     deleteEmployee,
     getEmployeeById,
     getEmployeesByDesignation,
-    modifyEmployee
+    modifyEmployee,
+    clearEmployeeCache // Export this for potential external use
 };
+
+
+// redis datatypes

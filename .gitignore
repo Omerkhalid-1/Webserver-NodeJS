@@ -10,3 +10,5 @@ postgres.session.sql
 # Ignore all .log files
 *.log
 .env.test
+*.rdb
+*.env.test

@@ -2,12 +2,19 @@ const path = require('path');
 const express = require('express');
 const PORT = process.env.PORT || 3500;
 const app = express();
+const redis = require('redis'); 
+const RedisClient = redis.createClient();
+
 require('dotenv').config({ quiet: true });
 const {logger, logEvents} = require('./middleware/logEvents');
 const verifyJWT = require('./middleware/verifyJWT');
 const cookieParser = require('cookie-parser');
 // Import database
 const { sequelize, testConnection, syncDatabase } = require('./database/connection');
+const { url } = require('inspector');
+
+
+const DEFAULT_EXPIRATION = 3600; // 1 hour
 
 // Initialize database connection
 const initializeDatabase = async () => {
@@ -24,11 +31,6 @@ const initializeDatabase = async () => {
 // Health check 
 app.get('/health', async (req, res) => {
     try {
-        // Test database connection 
-        // query select 
-        // selete to get tables. 
-        // 1- connection 
-        // 2- database 
         await sequelize.authenticate();
         res.json({ 
             status: 'OK', 

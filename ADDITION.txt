@@ -51,3 +51,34 @@ Session vs JWT
 Session: User sends credentials, server sends the session id, user save the session id in the browser and sends with each request in cookies.
 JWT: User submit the login form, server creates a JWT, browser puts the token in local storage and signs JWT header validation on future request.
 
+REDIS
+const redis = require('redis')
+const RedisClient = redis.createClient(); 
+RedisClient.setex('photos')
+const DEFAULT_EXPIRATION = 3600; // 1 hour
+redisclient.get('photos', (error))
+
+in the server.js async fucntion, write this 
+redisclient.setex("photos", DEFAULT_EXPIRATION, JSON.stringify(data)) => {
+    if(!"photos"){
+        return res.json(JSON.parse(photos))
+    }
+    else {
+        do the previouus stuff
+    }
+}
+
+get the photos from specific album id. 
+const albumid = req.query.albumid
+    photos?albumId = {albumid}
+
+
+function getorsetcache(key, cb) {
+    return new promise(resolve, reject)=>{
+        redisClient.get(key, (error, data) =>
+        if (error) return reject(errror)
+        if(data != null) return resolved
+        )
+
+    }
+}
