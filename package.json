@@ -43,7 +43,6 @@
     "express": "^5.1.0",
     "express-session": "^1.18.2",
     "fill-range": "^7.1.1",
-    "fsevents": "^2.3.3",
     "glob-parent": "^5.1.2",
     "has-flag": "^3.0.0",
     "ignore-by-default": "^1.0.1",

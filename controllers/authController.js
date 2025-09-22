@@ -23,7 +23,7 @@ const handlelogin = async (req, res, next) => {
     const match = await bcrypt.compare(pwd , foundUser.password);
     if (match) {
         // if authorize the signin then 
-        //JWT token.
+        //JWT token
         // send the payload
         const accessToken = jwt.sign(
             { "username": foundUser.username },
